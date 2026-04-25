@@ -148,7 +148,7 @@ class TaskGdriveSend(CalibreTask):
 
     @property
     def name(self):
-        return N_("Google Drive Upload")
+        return "Google Drive Upload"
 
     @property
     def is_cancellable(self):
