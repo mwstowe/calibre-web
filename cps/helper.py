@@ -201,13 +201,15 @@ def check_send_to_gdrive(entry):
     """Returns available book formats for sending to Google Drive."""
     if not len(entry.data):
         return []
+    gdrive_formats = {'EPUB', 'PDF', 'AZW3', 'CBZ', 'CBR'}
     book_formats = []
     for ele in iter(entry.data):
         fmt = ele.format.upper()
-        book_formats.append({
-            'format': ele.format.capitalize(),
-            'text': _('Send %(format)s to Google Drive', format=fmt)
-        })
+        if fmt in gdrive_formats:
+            book_formats.append({
+                'format': ele.format.capitalize(),
+                'text': _('Send %(format)s to Google Drive', format=fmt)
+            })
     return book_formats
 
 
