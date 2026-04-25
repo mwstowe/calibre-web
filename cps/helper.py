@@ -63,6 +63,7 @@ from .services.worker import WorkerThread
 from .tasks.mail import TaskEmail
 from .tasks.thumbnail import TaskClearCoverThumbnailCache, TaskGenerateCoverThumbnails
 from .tasks.metadata_backup import TaskBackupMetadata
+from .tasks.gdrive_send import TaskGdriveSend
 from .file_helper import get_temp_dir
 from .epub_helper import get_content_opf, create_new_metadata_backup, updateEpub, replace_metadata
 from .embed_helper import do_calibre_export
@@ -196,6 +197,20 @@ def check_send_to_ereader(entry):
         return None
 
 
+def check_send_to_gdrive(entry):
+    """Returns available book formats for sending to Google Drive."""
+    if not len(entry.data):
+        return []
+    book_formats = []
+    for ele in iter(entry.data):
+        fmt = ele.format.upper()
+        book_formats.append({
+            'format': ele.format.capitalize(),
+            'text': _('Send %(format)s to Google Drive', format=fmt)
+        })
+    return book_formats
+
+
 # Check if a reader is existing for any of the book formats, if not, return empty list, otherwise return
 # list with supported formats
 def check_read_formats(entry):
@@ -234,6 +249,22 @@ def send_mail(book_id, book_format, convert, ereader_mail, calibrepath, user_id)
                                  config.get_mail_settings(), email,
                                  email_text, _('This Email has been sent via Calibre-Web.'), book.id))
             return
+    return _("The requested file could not be read. Maybe wrong permissions?")
+
+
+def send_to_gdrive(book_id, book_format, user_gdrive_token, gdrive_folder, user_id):
+    """Queue a background task to upload a book to the user's Google Drive."""
+    book = calibre_db.get_book(book_id)
+    if not book:
+        return _("Oops! Selected book is unavailable.")
+    for entry in iter(book.data):
+        if entry.format.upper() == book_format.upper():
+            filename = entry.name + '.' + book_format.lower()
+            WorkerThread.add(user_id, TaskGdriveSend(
+                book.path, filename, book.title,
+                user_gdrive_token, gdrive_folder, book.id
+            ))
+            return None
     return _("The requested file could not be read. Maybe wrong permissions?")
 
 
