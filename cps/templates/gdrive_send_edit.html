@@ -9,6 +9,7 @@
       {{ _('Set the redirect URI to:') }}
     </p>
     <pre>{{ redirect_uri }}</pre>
+    <p><a href="https://github.com/mwstowe/calibre-web/blob/master/docs/gdrive-send.md" target="_blank">{{ _('Setup guide and troubleshooting') }}</a></p>
     <div class="form-group">
       <label for="config_gdrive_send_client_id">{{_('Google OAuth Client ID')}}</label>
       <input type="text" class="form-control" name="config_gdrive_send_client_id" id="config_gdrive_send_client_id" value="{{ content.config_gdrive_send_client_id or '' }}">
