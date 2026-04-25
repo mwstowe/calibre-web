@@ -1604,7 +1604,6 @@ def gdrive_send_connect():
         return redirect(url_for('web.profile'))
 
     redirect_uri = url_for('web.gdrive_send_callback', _external=True)
-    log.info("GDrive Send connect - redirect_uri: %s", redirect_uri)
     flow = Flow.from_client_config(
         _gdrive_send_client_config(),
         scopes=['https://www.googleapis.com/auth/drive.file'],
