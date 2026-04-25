@@ -1615,6 +1615,7 @@ def gdrive_send_connect():
         prompt='consent'
     )
     flask_session['gdrive_send_state'] = state
+    flask_session['gdrive_send_code_verifier'] = flow.code_verifier
     return redirect(authorization_url)
 
 
@@ -1635,7 +1636,8 @@ def gdrive_send_callback():
         redirect_uri=redirect_uri,
         state=flask_session.get('gdrive_send_state')
     )
-    flow.fetch_token(authorization_response=request.url)
+    flow.fetch_token(authorization_response=request.url,
+                     code_verifier=flask_session.get('gdrive_send_code_verifier'))
     creds = flow.credentials
 
     token_data = {
