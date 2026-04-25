@@ -82,7 +82,7 @@
                             {% endif %}
                             {% if entry.gdrive_share_list.__len__() == 1 %}
                                 <div class="btn-group" role="group">
-                                    <button class="btn btn-primary sendbtn-form" data-href="{{url_for('web.send_to_gdrive_route', book_id=entry.id, book_format=entry.gdrive_share_list[0]['format'])}}">
+                                    <button class="btn btn-primary sendbtn-form" data-href="{{url_for('web.send_to_gdrive_route', book_id=entry.id, book_format=entry.gdrive_share_list[0]['format'], convert=entry.gdrive_share_list[0]['convert'])}}">
                                         <span class="glyphicon glyphicon-cloud-upload"></span> {{entry.gdrive_share_list[0]['text']}}
                                     </button>
                                 </div>
@@ -96,7 +96,7 @@
                                     <ul class="dropdown-menu" aria-labelledby="send-to-gdrive">
                                         {% for format in entry.gdrive_share_list %}
                                             <li>
-                                                <a class="sendbtn-form" data-href="{{url_for('web.send_to_gdrive_route', book_id=entry.id, book_format=format['format'])}}">{{ format['text'] }}</a>
+                                                <a class="sendbtn-form" data-href="{{url_for('web.send_to_gdrive_route', book_id=entry.id, book_format=format['format'], convert=format['convert'])}}">{{ format['text'] }}</a>
                                             </li>
                                         {% endfor %}
                                     </ul>

@@ -1276,17 +1276,17 @@ def send_to_ereader(book_id, book_format, convert):
     return make_response(jsonify(response))
 
 
-@web.route('/send_gdrive/<int:book_id>/<book_format>', methods=["POST"])
+@web.route('/send_gdrive/<int:book_id>/<book_format>/<int:convert>', methods=["POST"])
 @login_required_if_no_ano
 @download_required
-def send_to_gdrive_route(book_id, book_format):
+def send_to_gdrive_route(book_id, book_format, convert):
     token = current_user.gdrive_send_token
     if not token or not token.get('refresh_token'):
         response = [{'type': "danger",
                      'message': _("Please connect your Google Drive account in your profile first.")}]
         return make_response(jsonify(response))
     folder = current_user.gdrive_send_folder or "Calibre-Web"
-    result = send_to_gdrive(book_id, book_format, token, folder, current_user.name)
+    result = send_to_gdrive(book_id, book_format, token, folder, current_user.name, convert)
     if result is None:
         ub.update_download(book_id, int(current_user.id))
         response = [{'type': "success",

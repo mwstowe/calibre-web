@@ -81,7 +81,7 @@ except (ImportError, RuntimeError) as e:
 
 
 # Convert existing book entry to new format
-def convert_book_format(book_id, calibre_path, old_book_format, new_book_format, user_id, ereader_mail=None):
+def convert_book_format(book_id, calibre_path, old_book_format, new_book_format, user_id, ereader_mail=None, gdrive_settings=None):
     book = calibre_db.get_book(book_id)
     data = calibre_db.get_book_format(book.id, old_book_format)
     if not data:
@@ -113,7 +113,8 @@ def convert_book_format(book_id, calibre_path, old_book_format, new_book_format,
            link)
     settings['old_book_format'] = old_book_format
     settings['new_book_format'] = new_book_format
-    WorkerThread.add(user_id, TaskConvert(file_path, book.id, txt, settings, ereader_mail, user_id))
+    WorkerThread.add(user_id, TaskConvert(file_path, book.id, txt, settings, ereader_mail, user_id,
+                                         gdrive_settings=gdrive_settings))
     return None
 
 
@@ -202,13 +203,30 @@ def check_send_to_gdrive(entry):
     if not len(entry.data):
         return []
     gdrive_formats = {'EPUB', 'PDF', 'AZW3', 'CBZ', 'CBR'}
+    available = set()
     book_formats = []
+    for ele in iter(entry.data):
+        available.add(ele.format.upper())
     for ele in iter(entry.data):
         fmt = ele.format.upper()
         if fmt in gdrive_formats:
             book_formats.append({
                 'format': ele.format.capitalize(),
+                'convert': 0,
                 'text': _('Send %(format)s to Google Drive', format=fmt)
+            })
+    if config.config_converterpath:
+        if 'MOBI' in available and 'EPUB' not in available:
+            book_formats.append({
+                'format': 'Epub',
+                'convert': 1,
+                'text': _('Convert %(orig)s to %(format)s and send to Google Drive', orig='Mobi', format='Epub')
+            })
+        if 'AZW3' in available and 'EPUB' not in available:
+            book_formats.append({
+                'format': 'Epub',
+                'convert': 2,
+                'text': _('Convert %(orig)s to %(format)s and send to Google Drive', orig='Azw3', format='Epub')
             })
     return book_formats
 
@@ -254,11 +272,19 @@ def send_mail(book_id, book_format, convert, ereader_mail, calibrepath, user_id)
     return _("The requested file could not be read. Maybe wrong permissions?")
 
 
-def send_to_gdrive(book_id, book_format, user_gdrive_token, gdrive_folder, user_id):
+def send_to_gdrive(book_id, book_format, user_gdrive_token, gdrive_folder, user_id, convert=0):
     """Queue a background task to upload a book to the user's Google Drive."""
     book = calibre_db.get_book(book_id)
     if not book:
         return _("Oops! Selected book is unavailable.")
+
+    if convert == 1:
+        return convert_book_format(book_id, config.get_book_path(), 'mobi', book_format.lower(), user_id,
+                                   gdrive_settings={'token': user_gdrive_token, 'folder': gdrive_folder})
+    if convert == 2:
+        return convert_book_format(book_id, config.get_book_path(), 'azw3', book_format.lower(), user_id,
+                                   gdrive_settings={'token': user_gdrive_token, 'folder': gdrive_folder})
+
     for entry in iter(book.data):
         if entry.format.upper() == book_format.upper():
             filename = entry.name + '.' + book_format.lower()
